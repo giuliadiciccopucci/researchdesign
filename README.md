@@ -129,3 +129,125 @@ rename religiosity1howreligiouswouldyou religiosity
 drop religiositytimequestiontimerelig
 
 
+
+*uncertainty/independence recoding/renaming
+
+*HOW MUCH UNCERTAIN : this is our main mediator 
+
+tab uncertain1howuncertaindoyoufeela
+drop uncertain1timequestiontimeuncert
+rename uncertain1howuncertaindoyoufeela uncertainty_feeling
+tab uncertainty_feeling
+
+* UNCERTAINTY FACTORS
+*financial instability
+tab uncertain21whichofthefollowingar
+rename uncertain21whichofthefollowingar uncertainty_finances
+tab uncertainty_finances
+lab var uncertainty_finances "financial instability is a factor of uncertainty"
+
+*career or employment instability
+tab uncertain22whichofthefollowingar
+rename uncertain22whichofthefollowingar uncertainty_career
+tab uncertainty_career
+lab var uncertainty_career "career instability is a factor of uncertainty"
+
+*personal health
+tab uncertain23whichofthefollowingar
+rename uncertain23whichofthefollowingar uncertainty_health
+lab var uncertainty_health "helth is a factor of uncertainty"
+tab uncertainty_health
+
+*enviromental risks
+tab uncertain24whichofthefollowingar
+rename uncertain24whichofthefollowingar uncertainty_enviroment
+lab var uncertainty_enviroment "enviromental risks are a factor of uncertainty"
+tab uncertainty_enviroment
+
+*human violence
+tab uncertain25whichofthefollowingar
+rename uncertain25whichofthefollowingar uncertainty_violence
+lab var uncertainty_violence "human violence is a factor of uncertainty"
+tab uncertainty_violence
+
+*other
+tab uncertain2otherwhichofthefollowi
+rename uncertain2otherwhichofthefollowi uncertainty_other
+lab var uncertainty_other "other factors of uncertainty"
+tab uncertainty_other
+
+
+drop uncertain2timequestiontimeuncert
+
+*additive intex about the factors of uncertainty from 0 to 5
+gen uncertainty_index = (uncertainty_finances== "Yes") + (uncertainty_career== "Yes") + (uncertainty_health== "Yes") + (uncertainty_enviroment== "Yes") + (uncertainty_violence=="Yes") 
+tab uncertainty_index
+asdoc tab uncertainty_index, save(uncertainty_index.doc)
+
+
+*INDEPENDENCE 
+*Managing one's own finances and expenses
+tab uncertain31whatdoyouconsidertobe
+rename uncertain31whatdoyouconsidertobe independence_finances
+lab var independence_finances "importance of finacial independence"
+tab independence_finances
+
+
+*Being able to deal with emotions without depending on others
+tab uncertain32whatdoyouconsidertobe
+rename uncertain32whatdoyouconsidertobe independence_emotions
+lab var independence_emotions "importance of emotional independence"
+tab independence_emotions
+
+*Having autonomy in one's work and career choices
+tab uncertain33whatdoyouconsidertobe 
+rename uncertain33whatdoyouconsidertobe independence_career
+lab var independence_career "importance of career independence"
+tab independence_career
+
+*Having the ability to secure and maintain one's own living space
+tab uncertain34whatdoyouconsidertobe
+rename uncertain34whatdoyouconsidertobe independence_house
+lab var independence_house "importance of independence about living space"
+tab independence_house 
+
+*Being able to make important decisions independently
+tab uncertain35whatdoyouconsidertobe
+rename uncertain35whatdoyouconsidertobe independence_decisions
+lab var independence_decisions "importance of independence about taking decisions"
+tab independence_decisions 
+
+foreach var of varlist independence_finances independence_emotions independence_career independence_house  independence_decisions {
+    gen `var'_num = .
+    replace `var'_num = 1 if `var' == "Not important at all"
+    replace `var'_num = 2 if `var' == "Slightly important"
+    replace `var'_num = 3 if `var' == "Moderately important"
+    replace `var'_num = 4 if `var' == "Important"
+    replace `var'_num = 5 if `var' == "Very important"
+}
+
+*mean of the answers to have a scale 1-5
+egen independence_index = rowmean(independence_finances_num independence_emotions_num independence_career_num independence_house_num  independence_decisions_num)
+
+tab independence_index
+
+label variable independence_index "Independence index"
+
+gen independence_index_final = .
+replace independence_index_final = 1 if independence_index <= 2.5
+replace independence_index_final = 2 if independence_index > 2.5 & independence_index <= 3.5
+replace independence_index_final = 3 if independence_index > 3.5 & independence_index <= 5
+
+lab var independence_index_final "level of importance of independence"
+label define independence_index_final_lbl 1 "Low" 2 "Medium" 3 "High"
+label values independence_index_final independence_index_final_lbl
+
+tab independence_index_final
+
+asdoc tab independence_index_final, save(independence_index_final.doc)
+
+*independence limited by children 
+tab uncertain4doyoufeelthathavingchi
+rename uncertain4doyoufeelthathavingchi independence_children
+lab var independence_children "children would limit my indepencence"
+tab independence_children
