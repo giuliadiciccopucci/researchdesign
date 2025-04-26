@@ -91,6 +91,9 @@ label values migration_background migration_lbl
 
 tab migration_background
 
+*to export the table
+ssc install asdoc
+asdoc tab migration_background, save(tab_mig_back.doc)
 
 * LEVEL OF EDUCATION PARENTS
 tab parentedudadwhatisthehighestleve
