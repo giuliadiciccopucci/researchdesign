@@ -1,4 +1,3 @@
-# researchdesign
 cd "/Users/utente/Desktop/research_design"
 
 import delimited "/Users/utente/Desktop/research_design/data/results-survey274732.csv"
@@ -182,7 +181,17 @@ drop uncertain2timequestiontimeuncert
 *additive intex about the factors of uncertainty from 0 to 5
 gen uncertainty_index = (uncertainty_finances== "Yes") + (uncertainty_career== "Yes") + (uncertainty_health== "Yes") + (uncertainty_enviroment== "Yes") + (uncertainty_violence=="Yes") 
 tab uncertainty_index
-asdoc tab uncertainty_index, save(uncertainty_index.doc)
+
+gen uncertainty_index_final = .
+replace uncertainty_index_final = 1 if uncertainty_index == 0 | uncertainty_index == 1 
+replace uncertainty_index_final = 2 if uncertainty_index == 2 | uncertainty_index == 3
+replace uncertainty_index_final = 3 if uncertainty_index == 4 | uncertainty_index == 5
+lab var uncertainty_index_final "uncertainty level"
+label define uncertainty_index_final 1 "low" 2 "medium" 3 "high"
+tab uncertainty_index_final 
+asdoc tab uncertainty_index_final, save(uncertainty_index.doc)
+
+
 
 
 *INDEPENDENCE 
@@ -246,12 +255,11 @@ tab independence_index_final
 
 asdoc tab independence_index_final, save(independence_index_final.doc)
 
-*independence limited by children 
+*independence limited by children : !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 tab uncertain4doyoufeelthathavingchi
 rename uncertain4doyoufeelthathavingchi independence_children
 lab var independence_children "children would limit my indepencence"
 tab independence_children
-
 
 *--------------------------------------------------------------------
 *social media usage recoding/renaming
@@ -334,6 +342,7 @@ label variable telegram_usage "Telegram usage
 *--------------------------------------------------------------------
 
 * Facebook
+* the values of the variables are the means of the categories of the questions
 gen facebook_minutes = .
 replace facebook_minutes = 0    if facebook_usage == "Don't use it"
 replace facebook_minutes = 15   if facebook_usage == "Less than 30 minutes"
@@ -452,11 +461,12 @@ tab Total_Time
 *refininig index by creating 5 categories
 gen social_media_time = .
 
-replace social_media_time = 1 if Total_Time_new <= 120
-replace social_media_time = 2 if inrange(Total_Time_new, 121, 240)
-replace social_media_time = 3 if inrange(Total_Time_new, 241, 360)
-replace social_media_time = 4 if inrange(Total_Time_new, 361, 480)
-replace social_media_time = 5 if Total_Time_new > 480
+replace social_media_time = 1 if Total_Time <= 120
+replace social_media_time = 2 if inrange(Total_Time, 121, 240)
+replace social_media_time = 3 if inrange(Total_Time, 241, 360)
+replace social_media_time = 4 if inrange(Total_Time, 361, 480)
+replace social_media_time = 5 if Total_Time > 480
+tab social_media_time
 
 label define socialcat 1 "Very Low (0–2h)" 2 "Low (2–4h)" 3 "Medium (4–6h)" 4 "High (6–8h)" 5 "Very High (>8h)"
 label values social_media_time socialcat
@@ -651,4 +661,103 @@ label values fertility_knowledge fertknowlbl
 label variable fertility_knowledge "Confidence in fertility knowledge"
 tab fertility_knowledge
 
+*descriptive statistics of the main variables 
+*independent variable: social media usage 
+tab social_media_time
+summarize social_media_time
 
+ssc install estout, replace
+estpost summarize social_media_time
+esttab using "statistiche.doc", ///
+    cells("mean sd min max") ///
+    collabels("Media" "Dev. Std." "Min" "Max") ///
+    replace rtf
+	
+estpost tabulate social_media_time
+esttab using "frequenze.doc", cells("b pct") ///
+    collabels("Frequenza" "%") ///
+    replace rtf
+
+graph bar (count), over(social_media_time, label(angle(45))) ///
+    title("Social media usage") ///
+    ylabel(, grid)
+
+*mediator: content ?
+
+*moderator: uncertainty and independence
+
+tab uncertainty_index_final
+summarize uncertainty_index_final
+
+ssc install estout, replace
+estpost summarize uncertainty_index_final
+esttab using "statistiche1.doc", ///
+    cells("mean sd min max") ///
+    collabels("Media" "Dev. Std." "Min" "Max") ///
+    replace rtf
+	
+estpost tabulate uncertainty_index_final
+esttab using "frequenze1.doc", cells("b pct") ///
+    collabels("Frequenza" "%") ///
+    replace rtf
+	
+graph bar (count), over(uncertainty_index_final) ///
+    bar(1, color(navy)) ///
+    title("Percieved level of uncertainty")
+	
+tab independence_index_final
+summarize independence_index_final
+
+ssc install estout, replace
+estpost summarize independence_index_final
+esttab using "statistiche2.doc", ///
+    cells("mean sd min max") ///
+    collabels("Media" "Dev. Std." "Min" "Max") ///
+    replace rtf
+	
+estpost tabulate independence_index_final
+esttab using "frequenze2.doc", cells("b pct") ///
+    collabels("Frequenza" "%") ///
+    replace rtf
+
+graph bar (count), over(independence_index_final) ///
+    bar(1, color(olive)) ///
+    title("Importance of independence")
+	
+*fertility intentions 
+gen fertility_intention = . 
+replace fertility_intention = 1 if want_children == 2
+replace fertility_intention = 2 if want_children == 0
+replace fertility_intention = 3 if ideal_children == 1
+replace fertility_intention = 4 if ideal_children == 2
+replace fertility_intention = 5 if ideal_children == 3
+replace fertility_intention = 6 if ideal_children == 4
+
+
+label define fertint10 1 "Uncertain about fertility" ///
+                      2 "No children" ///
+                      3 "Wants 1 child" ///
+                      4 "Wants 2 children" ///
+                      5 "Wants 3 children" ///
+                      6 "Wants 4+ children"
+
+
+label values fertility_intention fertint10
+label variable fertility_intention "Fertility intention"
+tab fertility_intention
+
+estpost tabulate fertility_intention
+esttab using "frequenze3.doc", cells("b pct") ///
+    collabels("Frequenza" "%") ///
+    replace rtf
+	
+graph bar (count), over(fertility_intention, label(angle(0))) ///
+    bar(1, color(cranberry)) ///
+    bar(2, color(emerald)) ///
+    bar(3, color(navy)) ///
+    bar(4, color(sand)) ///
+    bar(5, color(dkorange)) ///
+    bar(6, color(purple)) ///
+    legend(off) ///
+    title("Distribution of fertility intention")
+	
