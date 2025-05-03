@@ -724,40 +724,4 @@ graph bar (count), over(independence_index_final) ///
     bar(1, color(olive)) ///
     title("Importance of independence")
 	
-*fertility intentions 
-gen fertility_intention = . 
-replace fertility_intention = 1 if want_children == 2
-replace fertility_intention = 2 if want_children == 0
-replace fertility_intention = 3 if ideal_children == 1
-replace fertility_intention = 4 if ideal_children == 2
-replace fertility_intention = 5 if ideal_children == 3
-replace fertility_intention = 6 if ideal_children == 4
-
-
-label define fertint10 1 "Uncertain about fertility" ///
-                      2 "No children" ///
-                      3 "Wants 1 child" ///
-                      4 "Wants 2 children" ///
-                      5 "Wants 3 children" ///
-                      6 "Wants 4+ children"
-
-
-label values fertility_intention fertint10
-label variable fertility_intention "Fertility intention"
-tab fertility_intention
-
-estpost tabulate fertility_intention
-esttab using "frequenze3.doc", cells("b pct") ///
-    collabels("Frequenza" "%") ///
-    replace rtf
-	
-graph bar (count), over(fertility_intention, label(angle(0))) ///
-    bar(1, color(cranberry)) ///
-    bar(2, color(emerald)) ///
-    bar(3, color(navy)) ///
-    bar(4, color(sand)) ///
-    bar(5, color(dkorange)) ///
-    bar(6, color(purple)) ///
-    legend(off) ///
-    title("Distribution of fertility intention")
 	
