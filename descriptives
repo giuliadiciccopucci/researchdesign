@@ -24,6 +24,8 @@ drop birthtimequestiontimebirth
 gen age= 2025 - year_of_birth
 tab age
 
+drop if age> 26
+
 *HIGH SCHOOL
 drop highschoolotherwhattypeofhighsch
 drop highschooltimequestiontimehighsc
