@@ -1,1 +1,17 @@
+describe entertainment_content_cont informational_content_cont lifestyle_content_cont family_content_cont sexualhealth_content_cont career_content_cont finance_content_cont mentalhealth_content_cont environment_content_cont independent_content_cont
 
+
+factor entertainment_content_cont informational_content_cont lifestyle_content_cont family_content_cont sexualhealth_content_cont career_content_cont finance_content_cont mentalhealth_content_cont environment_content_cont independent_content_cont
+
+estat kmo 
+*keep only if >0.6. So according to this, we keep: lifestyle, family, sexual health, career, mental health, independence content  
+
+ssc install factortest
+
+factortest entertainment_content_cont informational_content_cont lifestyle_content_cont family_content_cont sexualhealth_content_cont career_content_cont finance_content_cont mentalhealth_content_cont environment_content_cont independent_content_cont
+
+*balrett test is significant 
+factor  lifestyle_content_cont family_content_cont sexualhealth_content_cont career_content_cont mentalhealth_content_cont  independent_content_cont, factors(6)
+screeplot
+
+*we have only one factor so we can't proceed with factor analysis 
