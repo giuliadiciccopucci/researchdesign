@@ -18,8 +18,8 @@ drop genderotherchooseyourgenderother
 drop if gender == "Other" | gender == "Prefer not to say"
 
 gen gender_num = .
-replace gender_num = 1 if gender == "Male"
-replace gender_num =2 if gender == "Female"
+replace gender_num = 0 if gender == "Male"
+replace gender_num = 1 if gender == "Female"
 
 tab gender_num
 
@@ -412,6 +412,17 @@ replace instagram_minutes = 150  if instagram_usage == "2–3 hours"
 replace instagram_minutes = 210  if instagram_usage == "More than 3 hours"
 tab instagram_minutes
 
+*recoding for regression (M1)
+gen instagram_use_cat = .
+replace instagram_use_cat = 0 if inlist(instagram_usage, "Don't use it", "Less than 30 minutes")
+replace instagram_use_cat = 1 if inlist(instagram_usage, "30 minutes to 1 hour", "1–2 hours")
+replace instagram_use_cat = 2 if inlist(instagram_usage, "2–3 hours", "More than 3 hours")
+label define instag_use_lbl 0 "Low use" 1 "Medium use" 2 "High use"
+label values instagram_use_cat instag_use_lbl
+tab instagram_use_cat
+* put .i in the regression 
+
+
 * X (ex Twitter)
 gen x_minutes = .
 replace x_minutes = 0    if x_usage == "Don't use it"
@@ -442,6 +453,15 @@ replace tiktok_minutes = 150  if tiktok_usage == "2–3 hours"
 replace tiktok_minutes = 210  if tiktok_usage == "More than 3 hours"
 tab tiktok_minutes
 
+*recoding for the regression
+gen tiktok_use_cat = .
+replace tiktok_use_cat = 0 if inlist(tiktok_usage, "Don't use it", "Less than 30 minutes")
+replace tiktok_use_cat = 1 if inlist(tiktok_usage, "30 minutes to 1 hour", "1–2 hours")
+replace tiktok_use_cat = 2 if inlist(tiktok_usage, "2–3 hours", "More than 3 hours")
+label define tiktok_use_lbl 0 "Low use" 1 "Medium use" 2 "High use"
+label values tiktok_use_cat tiktok_use_lbl
+tab tiktok_use_cat
+
 * LinkedIn
 gen linkedin_minutes = .
 replace linkedin_minutes = 0    if linkedin_usage == "Don't use it"
@@ -471,6 +491,15 @@ replace youtube_minutes = 90   if youtube_usage == "1–2 hours"
 replace youtube_minutes = 150  if youtube_usage == "2–3 hours"
 replace youtube_minutes = 210  if youtube_usage == "More than 3 hours"
 tab youtube_minutes
+
+*recoding for the regression
+gen youtube_use_cat = .
+replace youtube_use_cat = 0 if inlist(youtube_usage, "Don't use it", "Less than 30 minutes")
+replace youtube_use_cat = 1 if inlist(youtube_usage, "30 minutes to 1 hour", "1–2 hours")
+replace youtube_use_cat = 2 if inlist(youtube_usage, "2–3 hours", "More than 3 hours")
+label define youtube_use_lbl 0 "Low use" 1 "Medium use" 2 "High use"
+label values youtube_use_cat youtube_use_lbl
+tab youtube_use_cat
 
 * Reddit
 gen reddit_minutes = .
@@ -732,9 +761,8 @@ graph bar (count), over(social_media_time, label(angle(45))) ///
     title("Social media usage") ///
     ylabel(, grid)
 
-*mediator: content 
 
-*mediators: uncertainty and independence
+*mediators: uncertainty and independence. we cannot use independence index since the distrinbution is not normal.
 
 tab uncertainty_index_final
 summarize uncertainty_index_final
@@ -915,10 +943,10 @@ tab telegram_usage
 
 *we will use tiktok instagram and youtube 
 
-* 1M use of social media / content of media use (less frequent -more). sample sizes 
+*  use of social media / content of media use (less frequent -more). sample sizes 
 * ideal children only descriptive (maybe to add at hte end)
 
-
+*MODELS WITH SOCIAL MEDIA USAGE (INSTAGRAM TIKTOK AND YOUTUBE) AND FERTILITY INTENTIONS
 gen fertility_intentions = .
 replace fertility_intentions = 0 if want_children == 0
 replace fertility_intentions = 0 if want_children == 2
@@ -929,29 +957,249 @@ label define fertility_intentions 0 "No or haven't decided yet" 1 "Yes"
 label values fertility_intentions fertility_intentions
 tab fertility_intentions
 
-*model 1
-logistic fertility_intentions instagram_minutes
-logistic fertility_intentions tiktok_minutes
-logistic fertility_intentions youtube_minutes
+*model 1, 2, 3
+logistic fertility_intentions i.instagram_use_cat
+logistic fertility_intentions i.tiktok_use_cat
+logistic fertility_intentions i.youtube_use_cat
 
-logistic fertility_intentions instagram_minutes i.gender_num religiosity_num age 
+logistic fertility_intentions i.instagram_use_cat i.gender_num religiosity_num age 
 margins, dydx(*)  // calcola Average Marginal Effects (AME)
 marginsplot, recast(bar)
 
 
-logistic fertility_intentions tiktok_minutes i.gender_num religiosity_num age 
+logistic fertility_intentions i.tiktok_use_cat i.gender_num religiosity_num age 
 margins, dydx(*)  // calcola Average Marginal Effects (AME)
 marginsplot, recast(bar)
 
-logistic fertility_intentions youtube_minutes i.gender_num religiosity_num age 
+logistic fertility_intentions i.youtube_use_cat i.gender_num religiosity_num age 
 margins, dydx(*)  // calcola Average Marginal Effects (AME)
 marginsplot, recast(bar)
 
 *put the models together
-quietly logit fertility_intentions tiktok_minutes i.gender_num religiosity_num age 
+quietly logit fertility_intentions i.instagram_use_cat i.gender_num religiosity_num age 
 estimates store m1
-quietly regress fertility_intentions instagram_minutes i.gender_num religiosity_num age 
+quietly regress fertility_intentions i.tiktok_use_cat i.gender_num religiosity_num age 
 estimates store m2
-quietly regress fertility_intentions youtube_minutes i.gender_num religiosity_num age 
+quietly regress fertility_intentions i.youtube_use_cat i.gender_num religiosity_num age 
 estimates store m3
 coefplot m1 m2 m3, drop(_cons) xline(0) 
+
+*MODELS CONTENT- FERTILITY INTENTIONS. what about uncertainty?
+** first of all we recode contents in binary variables and we aggregate some of them that are similar
+
+* Recoding
+label define freq_binary 0 "Less frequent" 1 "More frequent"
+
+gen ent_binary = .
+replace ent_binary = 0 if inlist(entertainment_content_cont, 0, 1, 2)
+replace ent_binary = 1 if inlist(entertainment_content_cont, 3, 4)
+label values ent_binary freq_binary
+label variable ent_binary "Frequent exposure to entertainment content"
+
+gen info_binary = .
+replace info_binary = 0 if inlist(informational_content_cont, 0, 1, 2)
+replace info_binary = 1 if inlist(informational_content_cont, 3, 4)
+label values info_binary freq_binary
+label variable info_binary "Frequent exposure to informational content"
+
+gen life_binary = .
+replace life_binary = 0 if inlist(lifestyle_content_cont, 0, 1, 2)
+replace life_binary = 1 if inlist(lifestyle_content_cont, 3, 4)
+label values life_binary freq_binary
+label variable life_binary "Frequent exposure to lifestyle content"
+
+gen fam_binary = .
+replace fam_binary = 0 if inlist(family_content_cont, 0, 1, 2)
+replace fam_binary = 1 if inlist(family_content_cont, 3, 4)
+label values fam_binary freq_binary
+label variable fam_binary "Frequent exposure to family content"
+
+gen sexhlth_binary = .
+replace sexhlth_binary = 0 if inlist(sexualhealth_content_cont, 0, 1, 2)
+replace sexhlth_binary = 1 if inlist(sexualhealth_content_cont, 3, 4)
+label values sexhlth_binary freq_binary
+label variable sexhlth_binary "Frequent exposure to sexual health content"
+
+gen career_binary = .
+replace career_binary = 0 if inlist(career_content_cont, 0, 1, 2)
+replace career_binary = 1 if inlist(career_content_cont, 3, 4)
+label values career_binary freq_binary
+label variable career_binary "Frequent exposure to career content"
+
+gen fin_binary = .
+replace fin_binary = 0 if inlist(finance_content_cont, 0, 1, 2)
+replace fin_binary = 1 if inlist(finance_content_cont, 3, 4)
+label values fin_binary freq_binary
+label variable fin_binary "Frequent exposure to finance content"
+
+gen mh_binary = .
+replace mh_binary = 0 if inlist(mentalhealth_content_cont, 0, 1, 2)
+replace mh_binary = 1 if inlist(mentalhealth_content_cont, 3, 4)
+label values mh_binary freq_binary
+label variable mh_binary "Frequent exposure to mental health content"
+
+gen env_binary = .
+replace env_binary = 0 if inlist(environment_content_cont, 0, 1, 2)
+replace env_binary = 1 if inlist(environment_content_cont, 3, 4)
+label values env_binary freq_binary
+label variable env_binary "Frequent exposure to environment content"
+
+gen ind_binary = .
+replace ind_binary = 0 if inlist(independent_content_cont, 0, 1, 2)
+replace ind_binary = 1 if inlist(independent_content_cont, 3, 4)
+label values ind_binary freq_binary
+label variable ind_binary "Frequent exposure to independent content"
+
+tab ent_binary
+tab info_binary
+tab life_binary
+tab fam_binary
+tab sexhlth_binary
+tab career_binary
+tab fin_binary
+tab mh_binary
+tab env_binary
+tab ind_binary
+
+
+*correlation: we cannot aggregate them because the correlation coefficient is too low in any case
+correlate ent_binary life_binary
+* I cannot put them together, the correlation is 0.05
+correlate career_binary fin_binary
+*correlation is 0.28
+correlate sexhlth_binary mh_binary
+* too low (0.24)
+correlate info_binary sexhlth_binary 
+*0.0034
+
+*TYPE OF CONTENTS LOGISTIC REGRESSION 
+logistic fertility_intentions ent_binary
+logistic fertility_intentions info_binary
+logistic fertility_intentions life_binary
+logistic fertility_intentions fam_binary
+logistic fertility_intentions sexhlth_binary
+logistic fertility_intentions career_binary
+logistic fertility_intentions fin_binary
+logistic fertility_intentions mh_binary
+logistic fertility_intentions env_binary
+logistic fertility_intentions ind_binary
+
+*adding controls
+logistic fertility_intentions ent_binary i.gender_num religiosity_num age
+logistic fertility_intentions info_binary i.gender_num religiosity_num age
+logistic fertility_intentions life_binary i.gender_num religiosity_num age
+logistic fertility_intentions fam_binary i.gender_num religiosity_num age
+logistic fertility_intentions sexhlth_binary i.gender_num religiosity_num age
+logistic fertility_intentions career_binary i.gender_num religiosity_num age
+logistic fertility_intentions fin_binary i.gender_num religiosity_num age
+logistic fertility_intentions mh_binary i.gender_num religiosity_num age
+logistic fertility_intentions env_binary i.gender_num religiosity_num age
+logistic fertility_intentions ind_binary i.gender_num religiosity_num age
+
+*comparison 
+* installa estout se non lo hai già
+ssc install estout, replace
+
+eststo clear
+
+*here i create an unique sample to make sure that all the models are based on the same sample
+gen complete = !missing(fertility_intention, gender_num, religiosity_num, age, ///
+    ent_binary, info_binary, life_binary, fam_binary, sexhlth_binary, ///
+    career_binary, fin_binary, mh_binary, env_binary, ind_binary)
+ 
+
+eststo m4: logit fertility_intention ent_binary i.gender_num religiosity_num  age if complete
+margins, dydx(ent_binary)
+estadd margins, dydx(ent_binary)
+
+eststo m5: logit fertility_intention info_binary i.gender_num religiosity_num  age if complete
+margins, dydx(info_binary)
+estadd margins, dydx(info_binary)
+
+eststo m6: logit fertility_intention life_binary i.gender_num religiosity_num  age if complete
+margins, dydx(life_binary)
+estadd margins, dydx(life_binary)
+
+eststo m7: logit fertility_intention fam_binary i.gender_num religiosity_num  age if complete
+margins, dydx(fam_binary)
+estadd margins, dydx(fam_binary)
+
+eststo m8: logit fertility_intention sexhlth_binary i.gender_num religiosity_num  age if complete
+margins, dydx(sexhlth_binary)
+estadd margins, dydx(sexhlth_binary)
+
+eststo m9: logit fertility_intention career_binary i.gender_num religiosity_num  age if complete
+margins, dydx(career_binary)
+estadd margins, dydx(career_binary)
+
+eststo m10: logit fertility_intention fin_binary i.gender_num religiosity_num  age if complete
+margins, dydx(fin_binary)
+estadd margins, dydx(fin_binary)
+
+eststo m11: logit fertility_intention mh_binary i.gender_num religiosity_num  age if complete
+margins, dydx(mh_binary)
+estadd margins, dydx(mh_binary)
+
+eststo m12: logit fertility_intention env_binary i.gender_num religiosity_num  age if complete
+margins, dydx(env_binary)
+estadd margins, dydx(env_binary)
+
+eststo m13: logit fertility_intention ind_binary i.gender_num religiosity_num  age if complete
+margins, dydx(ind_binary)
+estadd margins, dydx(ind_binary)
+
+*comparison
+*table
+esttab m4 m5 m6 m7 m8 m9 m10 m11 m12 m13 using "fertility_models.csv", ///
+  b(%9.3f) se(%9.3f) ///
+  stats(N ll chi2 p aic bic) ///
+  star(* 0.10 ** 0.05 *** 0.01) ///
+  mtitles("Entertainment" "Informational" "Lifestyle" "Family" "Sexual health" "Career" "Finance" "Mental health" "Enviroment" "Independence") ///
+  label ///
+  title("Comparisons models social media content and fertility intentions") ///
+  replace
+
+*table
+// extraction of margunal effects from the models
+matrix ME = J(10, 1, .)
+local i = 1
+local vars "ent_binary info_binary life_binary fam_binary sexhlth_binary career_binary fin_binary mh_binary env_binary ind_binary"
+local titles "Entertainment Informational Lifestyle Family Sexual_health Career Finance Mental_health Environment Independence"
+
+foreach m in m4 m5 m6 m7 m8 m9 m10 m11 m12 m13 {
+    estimates restore `m'
+    matrix b = e(margins_b)
+    matrix ME[`i', 1] = b[1,1]
+    local i = `i' + 1
+}
+
+// cration of a dataset for the graph
+clear
+svmat ME, names(col)
+rename c1 meffect
+
+// 
+gen name = ""
+local j = 1
+foreach v in "Entertainment" "Informational" "Lifestyle" "Family" "Sexual health" "Career" "Finance" "Mental health" "Environment" "Independence" {
+    replace name = "`v'" in `j'
+    local j = `j' + 1
+}
+
+// Order of the effects from the highest to the lowest 
+gsort -meffect
+gen order = _n
+
+// graph bar
+graph bar meffect, over(name, sort(meffect) descending label(angle(45) labsize(medium))) ///
+    bar(1, color(navy%80)) ///
+    blabel(bar, format(%9.3f) color(black) size(medium)) ///
+    ytitle("Marginal effect on fertility intention", size(medium)) ///
+    title("Impact of different social media content on fertility intentions", size(large)) ///
+    subtitle("Marginal effects estimated by logit models", size(medium)) ///
+    note("Note: Effects are controlled for gender, religiosity and age.", size(small)) ///
+    scheme(s1mono) ///
+    yline(0, lcolor(red) lpattern(dash))
+graph export "fertility_effects_simple.png", replace width(3000) height(2000)
+
+
