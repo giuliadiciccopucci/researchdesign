@@ -1202,4 +1202,172 @@ graph bar meffect, over(name, sort(meffect) descending label(angle(45) labsize(m
     yline(0, lcolor(red) lpattern(dash))
 graph export "fertility_effects_simple.png", replace width(3000) height(2000)
 
+// testing mediating effect 
+
+// CONTENT -> FERTILITY
+
+* MODELLO 1: content → fertility_intentions (senza controlli)
+
+logit fertility_intentions ent_binary
+margins, dydx(ent_binary)
+
+logit fertility_intentions info_binary
+margins, dydx(info_binary)
+
+logit fertility_intentions life_binary
+margins, dydx(life_binary)
+
+logit fertility_intentions fam_binary
+margins, dydx(fam_binary)
+
+logit fertility_intentions sexhlth_binary
+margins, dydx(sexhlth_binary)
+
+logit fertility_intentions career_binary
+margins, dydx(career_binary)
+
+logit fertility_intentions fin_binary
+margins, dydx(fin_binary)
+
+logit fertility_intentions mh_binary
+margins, dydx(mh_binary)
+
+logit fertility_intentions env_binary
+margins, dydx(env_binary)
+
+logit fertility_intentions ind_binary
+margins, dydx(ind_binary)
+
+* MODELLO 2: content → fertility_intentions (CON controlli)
+
+logit fertility_intentions ent_binary i.gender_num religiosity_num age
+margins, dydx(ent_binary)
+
+logit fertility_intentions info_binary i.gender_num religiosity_num age
+margins, dydx(info_binary)
+
+logit fertility_intentions life_binary i.gender_num religiosity_num age
+margins, dydx(life_binary)
+
+logit fertility_intentions fam_binary i.gender_num religiosity_num age
+margins, dydx(fam_binary)
+
+logit fertility_intentions sexhlth_binary i.gender_num religiosity_num age
+margins, dydx(sexhlth_binary)
+
+logit fertility_intentions career_binary i.gender_num religiosity_num age
+margins, dydx(career_binary)
+
+logit fertility_intentions fin_binary i.gender_num religiosity_num age
+margins, dydx(fin_binary)
+
+logit fertility_intentions mh_binary i.gender_num religiosity_num age
+margins, dydx(mh_binary)
+
+logit fertility_intentions env_binary i.gender_num religiosity_num age
+margins, dydx(env_binary)
+
+logit fertility_intentions ind_binary i.gender_num religiosity_num age
+margins, dydx(ind_binary)
+
+// CONTENT -> UNCERTAIN
+
+* MODELLO 3: content → uncertainty_index_final (senza controlli)
+
+ologit uncertainty_index_final ent_binary
+margins, dydx(ent_binary)
+
+ologit uncertainty_index_final info_binary
+margins, dydx(info_binary)
+
+ologit uncertainty_index_final life_binary
+margins, dydx(life_binary)
+
+ologit uncertainty_index_final fam_binary
+margins, dydx(fam_binary)
+
+ologit uncertainty_index_final sexhlth_binary
+margins, dydx(sexhlth_binary)
+
+ologit uncertainty_index_final career_binary
+margins, dydx(career_binary)
+
+ologit uncertainty_index_final fin_binary
+margins, dydx(fin_binary)
+
+ologit uncertainty_index_final mh_binary
+margins, dydx(mh_binary)
+
+ologit uncertainty_index_final env_binary
+margins, dydx(env_binary)
+
+ologit uncertainty_index_final ind_binary
+margins, dydx(ind_binary)
+
+* MODELLO 4: content → uncertainty_index_final (con controlli)
+
+ologit uncertainty_index_final ent_binary i.gender_num religiosity_num age
+margins, dydx(ent_binary)
+
+ologit uncertainty_index_final info_binary i.gender_num religiosity_num age
+margins, dydx(info_binary)
+
+ologit uncertainty_index_final life_binary i.gender_num religiosity_num age
+margins, dydx(life_binary)
+
+ologit uncertainty_index_final fam_binary i.gender_num religiosity_num age
+margins, dydx(fam_binary)
+
+ologit uncertainty_index_final sexhlth_binary i.gender_num religiosity_num age
+margins, dydx(sexhlth_binary)
+
+ologit uncertainty_index_final career_binary i.gender_num religiosity_num age
+margins, dydx(career_binary)
+
+ologit uncertainty_index_final fin_binary i.gender_num religiosity_num age
+margins, dydx(fin_binary)
+
+ologit uncertainty_index_final mh_binary i.gender_num religiosity_num age
+margins, dydx(mh_binary)
+
+ologit uncertainty_index_final env_binary i.gender_num religiosity_num age
+margins, dydx(env_binary)
+
+ologit uncertainty_index_final ind_binary i.gender_num religiosity_num age
+margins, dydx(ind_binary)
+
+* MODELLO 5: uncertainty_index_final →  fertility_intentions (senza controlli)
+
+logit fertility_intentions uncertainty_index_final
+margins, dydx(uncertainty_index_final)
+
+* MODELLO 6: uncertainty_index_final →  fertility_intentions (con controlli)
+
+logit fertility_intentions uncertainty_index_final i.gender_num religiosity_num age
+margins, dydx(uncertainty_index_final)
+
+
+// Mediation Effect
+
+
+gsem ///
+  (uncertainty_index_final <- info_binary, ologit) ///   // Path a
+  (fertility_intentions <- info_binary uncertainty_index_final, logit), ///  // Path b + c'
+  nocapslatent
+
+gsem ///
+  (  uncertainty_index_final <- info_binary   i.gender_num religiosity_num age, ologit ) ///  // Path a
+  (  fertility_intentions    <- info_binary uncertainty_index_final   i.gender_num religiosity_num age, logit ), ///  // Path b + c′
+  nocapslatent
+
+gsem ///
+  (uncertainty_index_final <- ind_binary, ologit) ///           // Path a
+  (fertility_intentions <- ind_binary uncertainty_index_final, logit), /// // Path b + c'
+  nocapslatent
+
+gsem ///
+  (uncertainty_index_final <- ind_binary i.gender_num religiosity_num age, ologit) ///    // Path a
+  (fertility_intentions <- ind_binary uncertainty_index_final i.gender_num religiosity_num age, logit), /// // Path b + c'
+  nocapslatent
+
 
