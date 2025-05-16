@@ -1350,24 +1350,42 @@ margins, dydx(uncertainty_index_final)
 // Mediation Effect
 
 
-gsem ///
-  (uncertainty_index_final <- info_binary, ologit) ///   // Path a
-  (fertility_intentions <- info_binary uncertainty_index_final, logit), ///  // Path b + c'
-  nocapslatent
+// Mediation con mediate
 
-gsem ///
-  (  uncertainty_index_final <- info_binary   i.gender_num religiosity_num age, ologit ) ///  // Path a
-  (  fertility_intentions    <- info_binary uncertainty_index_final   i.gender_num religiosity_num age, logit ), ///  // Path b + c′
-  nocapslatent
+// Info -> Uncertainty -> Fertility intentions (*no controls*) 
+mediate (fertility_intentions, probit) ///  outcome, no controls
+        (uncertainty_index_final, linear) ///  mediator
+        (info_binary) ///  treatment
+        , all
 
-gsem ///
-  (uncertainty_index_final <- ind_binary, ologit) ///           // Path a
-  (fertility_intentions <- ind_binary uncertainty_index_final, logit), /// // Path b + c'
-  nocapslatent
+estat cde, mvalue(50 500 5000)
 
-gsem ///
-  (uncertainty_index_final <- ind_binary i.gender_num religiosity_num age, ologit) ///    // Path a
-  (fertility_intentions <- ind_binary uncertainty_index_final i.gender_num religiosity_num age, logit), /// // Path b + c'
-  nocapslatent
+// Info -> Uncertainty -> Fertility intentions (*with controls*) 
+mediate (fertility_intentions i.gender_num religiosity_num age, probit) /// outcome with controls
+        (uncertainty_index_final, linear) /// mediator with controls
+        (info_binary) /// treatment
+        , all
+
+estat cde, mvalue(50 500 5000)
+
+
+// Indipendent -> Uncertainty -> Fertility intentions (*no controls*) 
+mediate (fertility_intentions, probit) /// outcome, no controls
+        (uncertainty_index_final, linear) /// mediator
+        (ind_binary) /// treatment
+        , all
+
+estat cde, mvalue(50 500 5000)
+
+// Indipendent -> Uncertainty -> Fertility intentions (*with controls*) 
+mediate (fertility_intentions i.gender_num religiosity_num age, probit) /// outcome with controls
+        (uncertainty_index_final, linear) /// mediator with controls
+        (ind_binary) /// treatment
+        , all
+
+estat cde, mvalue(50 500 5000)
+
+
+  
 
 
