@@ -941,48 +941,7 @@ tab tiktok_usage
 tab reddit_usage
 tab telegram_usage
 
-*we will use tiktok instagram and youtube 
 
-*  use of social media / content of media use (less frequent -more). sample sizes 
-* ideal children only descriptive (maybe to add at hte end)
-
-*MODELS WITH SOCIAL MEDIA USAGE (INSTAGRAM TIKTOK AND YOUTUBE) AND FERTILITY INTENTIONS
-gen fertility_intentions = .
-replace fertility_intentions = 0 if want_children == 0
-replace fertility_intentions = 0 if want_children == 2
-replace fertility_intentions = 1 if want_children == 1
-
-label variable fertility_intentions "Do you want to have children?"
-label define fertility_intentions 0 "No or haven't decided yet" 1 "Yes"
-label values fertility_intentions fertility_intentions
-tab fertility_intentions
-
-*model 1, 2, 3
-logistic fertility_intentions i.instagram_use_cat
-logistic fertility_intentions i.tiktok_use_cat
-logistic fertility_intentions i.youtube_use_cat
-
-logistic fertility_intentions i.instagram_use_cat i.gender_num religiosity_num age 
-margins, dydx(*)  // calcola Average Marginal Effects (AME)
-marginsplot, recast(bar)
-
-
-logistic fertility_intentions i.tiktok_use_cat i.gender_num religiosity_num age 
-margins, dydx(*)  // calcola Average Marginal Effects (AME)
-marginsplot, recast(bar)
-
-logistic fertility_intentions i.youtube_use_cat i.gender_num religiosity_num age 
-margins, dydx(*)  // calcola Average Marginal Effects (AME)
-marginsplot, recast(bar)
-
-*put the models together
-quietly logit fertility_intentions i.instagram_use_cat i.gender_num religiosity_num age 
-estimates store m1
-quietly regress fertility_intentions i.tiktok_use_cat i.gender_num religiosity_num age 
-estimates store m2
-quietly regress fertility_intentions i.youtube_use_cat i.gender_num religiosity_num age 
-estimates store m3
-coefplot m1 m2 m3, drop(_cons) xline(0) 
 
 *MODELS CONTENT- FERTILITY INTENTIONS. what about uncertainty?
 ** first of all we recode contents in binary variables and we aggregate some of them that are similar
@@ -1061,6 +1020,25 @@ tab mh_binary
 tab env_binary
 tab ind_binary
 
+gen fertility_intentions = .
+replace fertility_intentions = 0 if want_children == 0
+replace fertility_intentions = 0 if want_children == 2
+replace fertility_intentions = 1 if want_children == 1
+
+label variable fertility_intentions "Do you want to have children?"
+label define fertility_intentions 0 "No or haven't decided yet" 1 "Yes"
+label values fertility_intentions fertility_intentions
+tab fertility_intentions
+
+* === FINAL ANALYTICAL SAMPLE ===
+gen sample_final = !missing(fertility_intentions, uncertainty_index_final, ///
+    instagram_use_cat, tiktok_use_cat, youtube_use_cat, ///
+    gender_num, religiosity_num, age, ///
+    ent_binary, info_binary, life_binary, fam_binary, sexhlth_binary, ///
+    career_binary, fin_binary, mh_binary, env_binary, ind_binary)
+
+label variable sample_final "Final analytical sample (1 = complete cases)"
+tab sample_final
 
 *correlation: we cannot aggregate them because the correlation coefficient is too low in any case
 correlate ent_binary life_binary
@@ -1072,29 +1050,64 @@ correlate sexhlth_binary mh_binary
 correlate info_binary sexhlth_binary 
 *0.0034
 
+*we will use tiktok instagram and youtube 
+
+*  use of social media / content of media use (less frequent -more). sample sizes 
+* ideal children only descriptive (maybe to add at hte end)
+
+*MODELS WITH SOCIAL MEDIA USAGE (INSTAGRAM TIKTOK AND YOUTUBE) AND FERTILITY INTENTIONS
+
+
+*model 1, 2, 3
+logistic fertility_intentions i.instagram_use_cat if sample_final == 1
+logistic fertility_intentions i.tiktok_use_cat if sample_final == 1
+logistic fertility_intentions i.youtube_use_cat if sample_final == 1
+
+logistic fertility_intentions i.instagram_use_cat i.gender_num religiosity_num age if sample_final == 1
+margins, dydx(*)  // calcola Average Marginal Effects (AME)
+marginsplot, recast(bar)
+
+
+logistic fertility_intentions i.tiktok_use_cat i.gender_num religiosity_num age if sample_final == 1
+margins, dydx(*)  // calcola Average Marginal Effects (AME)
+marginsplot, recast(bar)
+
+logistic fertility_intentions i.youtube_use_cat i.gender_num religiosity_num age if sample_final == 1
+margins, dydx(*)  // calcola Average Marginal Effects (AME)
+marginsplot, recast(bar)
+
+*put the models together
+quietly logit fertility_intentions i.instagram_use_cat i.gender_num religiosity_num age if sample_final == 1
+estimates store m1
+quietly regress fertility_intentions i.tiktok_use_cat i.gender_num religiosity_num age if sample_final == 1
+estimates store m2
+quietly regress fertility_intentions i.youtube_use_cat i.gender_num religiosity_num age if sample_final == 1
+estimates store m3
+coefplot m1 m2 m3, drop(_cons) xline(0) 
+
 *TYPE OF CONTENTS LOGISTIC REGRESSION 
-logistic fertility_intentions ent_binary
-logistic fertility_intentions info_binary
-logistic fertility_intentions life_binary
-logistic fertility_intentions fam_binary
-logistic fertility_intentions sexhlth_binary
-logistic fertility_intentions career_binary
-logistic fertility_intentions fin_binary
-logistic fertility_intentions mh_binary
-logistic fertility_intentions env_binary
-logistic fertility_intentions ind_binary
+logistic fertility_intentions ent_binary if sample_final == 1
+logistic fertility_intentions info_binary if sample_final == 1
+logistic fertility_intentions life_binary if sample_final == 1
+logistic fertility_intentions fam_binary if sample_final == 1
+logistic fertility_intentions sexhlth_binary if sample_final == 1
+logistic fertility_intentions career_binary if sample_final == 1
+logistic fertility_intentions fin_binary if sample_final == 1
+logistic fertility_intentions mh_binary if sample_final == 1
+logistic fertility_intentions env_binary if sample_final == 1
+logistic fertility_intentions ind_binary if sample_final == 1
 
 *adding controls
-logistic fertility_intentions ent_binary i.gender_num religiosity_num age
-logistic fertility_intentions info_binary i.gender_num religiosity_num age
-logistic fertility_intentions life_binary i.gender_num religiosity_num age
-logistic fertility_intentions fam_binary i.gender_num religiosity_num age
-logistic fertility_intentions sexhlth_binary i.gender_num religiosity_num age
-logistic fertility_intentions career_binary i.gender_num religiosity_num age
-logistic fertility_intentions fin_binary i.gender_num religiosity_num age
-logistic fertility_intentions mh_binary i.gender_num religiosity_num age
-logistic fertility_intentions env_binary i.gender_num religiosity_num age
-logistic fertility_intentions ind_binary i.gender_num religiosity_num age
+logistic fertility_intentions ent_binary i.gender_num religiosity_num age if sample_final == 1
+logistic fertility_intentions info_binary i.gender_num religiosity_num age if sample_final == 1
+logistic fertility_intentions life_binary i.gender_num religiosity_num age if sample_final == 1
+logistic fertility_intentions fam_binary i.gender_num religiosity_num age if sample_final == 1
+logistic fertility_intentions sexhlth_binary i.gender_num religiosity_num age if sample_final == 1
+logistic fertility_intentions career_binary i.gender_num religiosity_num age if sample_final == 1
+logistic fertility_intentions fin_binary i.gender_num religiosity_num age if sample_final == 1
+logistic fertility_intentions mh_binary i.gender_num religiosity_num age if sample_final == 1
+logistic fertility_intentions env_binary i.gender_num religiosity_num age if sample_final == 1
+logistic fertility_intentions ind_binary i.gender_num religiosity_num age if sample_final == 1
 
 *comparison 
 * installa estout se non lo hai già
@@ -1102,49 +1115,44 @@ ssc install estout, replace
 
 eststo clear
 
-*here i create an unique sample to make sure that all the models are based on the same sample
-gen complete = !missing(fertility_intention, gender_num, religiosity_num, age, ///
-    ent_binary, info_binary, life_binary, fam_binary, sexhlth_binary, ///
-    career_binary, fin_binary, mh_binary, env_binary, ind_binary)
  
 
-eststo m4: logit fertility_intention ent_binary i.gender_num religiosity_num  age if complete
+eststo m4: logit fertility_intention ent_binary i.gender_num religiosity_num  age if sample_final == 1
 margins, dydx(ent_binary)
 estadd margins, dydx(ent_binary)
 
-eststo m5: logit fertility_intention info_binary i.gender_num religiosity_num  age if complete
+eststo m5: logit fertility_intention info_binary i.gender_num religiosity_num  age if sample_final == 1
 margins, dydx(info_binary)
 estadd margins, dydx(info_binary)
 
-eststo m6: logit fertility_intention life_binary i.gender_num religiosity_num  age if complete
-margins, dydx(life_binary)
+eststo m6: logit fertility_intention life_binary i.gender_num religiosity_num  age if sample_final == 1
 estadd margins, dydx(life_binary)
 
-eststo m7: logit fertility_intention fam_binary i.gender_num religiosity_num  age if complete
+eststo m7: logit fertility_intention fam_binary i.gender_num religiosity_num  age if sample_final == 1
 margins, dydx(fam_binary)
 estadd margins, dydx(fam_binary)
 
-eststo m8: logit fertility_intention sexhlth_binary i.gender_num religiosity_num  age if complete
+eststo m8: logit fertility_intention sexhlth_binary i.gender_num religiosity_num  age if sample_final == 1
 margins, dydx(sexhlth_binary)
 estadd margins, dydx(sexhlth_binary)
 
-eststo m9: logit fertility_intention career_binary i.gender_num religiosity_num  age if complete
+eststo m9: logit fertility_intention career_binary i.gender_num religiosity_num  age if sample_final == 1
 margins, dydx(career_binary)
 estadd margins, dydx(career_binary)
 
-eststo m10: logit fertility_intention fin_binary i.gender_num religiosity_num  age if complete
+eststo m10: logit fertility_intention fin_binary i.gender_num religiosity_num  age if sample_final == 1
 margins, dydx(fin_binary)
 estadd margins, dydx(fin_binary)
 
-eststo m11: logit fertility_intention mh_binary i.gender_num religiosity_num  age if complete
+eststo m11: logit fertility_intention mh_binary i.gender_num religiosity_num  age if sample_final == 1
 margins, dydx(mh_binary)
 estadd margins, dydx(mh_binary)
 
-eststo m12: logit fertility_intention env_binary i.gender_num religiosity_num  age if complete
+eststo m12: logit fertility_intention env_binary i.gender_num religiosity_num  age if sample_final == 1
 margins, dydx(env_binary)
 estadd margins, dydx(env_binary)
 
-eststo m13: logit fertility_intention ind_binary i.gender_num religiosity_num  age if complete
+eststo m13: logit fertility_intention ind_binary i.gender_num religiosity_num  age if sample_final == 1
 margins, dydx(ind_binary)
 estadd margins, dydx(ind_binary)
 
@@ -1208,142 +1216,142 @@ graph export "fertility_effects_simple.png", replace width(3000) height(2000)
 
 * MODELLO 1: content → fertility_intentions (senza controlli)
 
-logit fertility_intentions ent_binary
+logit fertility_intentions ent_binary if sample_final == 1
 margins, dydx(ent_binary)
 
-logit fertility_intentions info_binary
+logit fertility_intentions info_binary if sample_final == 1
 margins, dydx(info_binary)
 
-logit fertility_intentions life_binary
+logit fertility_intentions life_binary if sample_final == 1
 margins, dydx(life_binary)
 
-logit fertility_intentions fam_binary
+logit fertility_intentions fam_binary if sample_final == 1
 margins, dydx(fam_binary)
 
-logit fertility_intentions sexhlth_binary
+logit fertility_intentions sexhlth_binary if sample_final == 1
 margins, dydx(sexhlth_binary)
 
-logit fertility_intentions career_binary
+logit fertility_intentions career_binary if sample_final == 1
 margins, dydx(career_binary)
 
-logit fertility_intentions fin_binary
+logit fertility_intentions fin_binary if sample_final == 1
 margins, dydx(fin_binary)
 
-logit fertility_intentions mh_binary
+logit fertility_intentions mh_binary if sample_final == 1
 margins, dydx(mh_binary)
 
-logit fertility_intentions env_binary
+logit fertility_intentions env_binary if sample_final == 1
 margins, dydx(env_binary)
 
-logit fertility_intentions ind_binary
+logit fertility_intentions ind_binary if sample_final == 1
 margins, dydx(ind_binary)
 
 * MODELLO 2: content → fertility_intentions (CON controlli)
 
-logit fertility_intentions ent_binary i.gender_num religiosity_num age
+logit fertility_intentions ent_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(ent_binary)
 
-logit fertility_intentions info_binary i.gender_num religiosity_num age
+logit fertility_intentions info_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(info_binary)
 
-logit fertility_intentions life_binary i.gender_num religiosity_num age
+logit fertility_intentions life_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(life_binary)
 
-logit fertility_intentions fam_binary i.gender_num religiosity_num age
+logit fertility_intentions fam_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(fam_binary)
 
-logit fertility_intentions sexhlth_binary i.gender_num religiosity_num age
+logit fertility_intentions sexhlth_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(sexhlth_binary)
 
-logit fertility_intentions career_binary i.gender_num religiosity_num age
+logit fertility_intentions career_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(career_binary)
 
-logit fertility_intentions fin_binary i.gender_num religiosity_num age
+logit fertility_intentions fin_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(fin_binary)
 
-logit fertility_intentions mh_binary i.gender_num religiosity_num age
+logit fertility_intentions mh_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(mh_binary)
 
-logit fertility_intentions env_binary i.gender_num religiosity_num age
+logit fertility_intentions env_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(env_binary)
 
-logit fertility_intentions ind_binary i.gender_num religiosity_num age
+logit fertility_intentions ind_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(ind_binary)
 
 // CONTENT -> UNCERTAIN
 
 * MODELLO 3: content → uncertainty_index_final (senza controlli)
 
-ologit uncertainty_index_final ent_binary
+ologit uncertainty_index_final ent_binary if sample_final == 1
 margins, dydx(ent_binary)
 
-ologit uncertainty_index_final info_binary
+ologit uncertainty_index_final info_binary if sample_final == 1
 margins, dydx(info_binary)
 
-ologit uncertainty_index_final life_binary
+ologit uncertainty_index_final life_binary if sample_final == 1
 margins, dydx(life_binary)
 
-ologit uncertainty_index_final fam_binary
+ologit uncertainty_index_final fam_binary if sample_final == 1
 margins, dydx(fam_binary)
 
-ologit uncertainty_index_final sexhlth_binary
+ologit uncertainty_index_final sexhlth_binary if sample_final == 1
 margins, dydx(sexhlth_binary)
 
-ologit uncertainty_index_final career_binary
+ologit uncertainty_index_final career_binary if sample_final == 1
 margins, dydx(career_binary)
 
-ologit uncertainty_index_final fin_binary
+ologit uncertainty_index_final fin_binary if sample_final == 1
 margins, dydx(fin_binary)
 
-ologit uncertainty_index_final mh_binary
+ologit uncertainty_index_final mh_binary if sample_final == 1
 margins, dydx(mh_binary)
 
-ologit uncertainty_index_final env_binary
+ologit uncertainty_index_final env_binary if sample_final == 1
 margins, dydx(env_binary)
 
-ologit uncertainty_index_final ind_binary
+ologit uncertainty_index_final ind_binary if sample_final == 1
 margins, dydx(ind_binary)
 
 * MODELLO 4: content → uncertainty_index_final (con controlli)
 
-ologit uncertainty_index_final ent_binary i.gender_num religiosity_num age
+ologit uncertainty_index_final ent_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(ent_binary)
 
-ologit uncertainty_index_final info_binary i.gender_num religiosity_num age
+ologit uncertainty_index_final info_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(info_binary)
 
-ologit uncertainty_index_final life_binary i.gender_num religiosity_num age
+ologit uncertainty_index_final life_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(life_binary)
 
-ologit uncertainty_index_final fam_binary i.gender_num religiosity_num age
+ologit uncertainty_index_final fam_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(fam_binary)
 
-ologit uncertainty_index_final sexhlth_binary i.gender_num religiosity_num age
+ologit uncertainty_index_final sexhlth_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(sexhlth_binary)
 
-ologit uncertainty_index_final career_binary i.gender_num religiosity_num age
+ologit uncertainty_index_final career_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(career_binary)
 
-ologit uncertainty_index_final fin_binary i.gender_num religiosity_num age
+ologit uncertainty_index_final fin_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(fin_binary)
 
-ologit uncertainty_index_final mh_binary i.gender_num religiosity_num age
+ologit uncertainty_index_final mh_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(mh_binary)
 
-ologit uncertainty_index_final env_binary i.gender_num religiosity_num age
+ologit uncertainty_index_final env_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(env_binary)
 
-ologit uncertainty_index_final ind_binary i.gender_num religiosity_num age
+ologit uncertainty_index_final ind_binary i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(ind_binary)
 
 * MODELLO 5: uncertainty_index_final →  fertility_intentions (senza controlli)
 
-logit fertility_intentions uncertainty_index_final
+logit fertility_intentions uncertainty_index_final if sample_final == 1
 margins, dydx(uncertainty_index_final)
 
 * MODELLO 6: uncertainty_index_final →  fertility_intentions (con controlli)
 
-logit fertility_intentions uncertainty_index_final i.gender_num religiosity_num age
+logit fertility_intentions uncertainty_index_final i.gender_num religiosity_num age if sample_final == 1
 margins, dydx(uncertainty_index_final)
 
 
@@ -1356,7 +1364,7 @@ margins, dydx(uncertainty_index_final)
 mediate (fertility_intentions, probit) ///  outcome, no controls
         (uncertainty_index_final, linear) ///  mediator
         (info_binary) ///  treatment
-        , all
+        if sample_final == 1, all
 
 estat cde, mvalue(50 500 5000)
 
@@ -1364,7 +1372,7 @@ estat cde, mvalue(50 500 5000)
 mediate (fertility_intentions i.gender_num religiosity_num age, probit) /// outcome with controls
         (uncertainty_index_final, linear) /// mediator with controls
         (info_binary) /// treatment
-        , all
+        if sample_final == 1, all
 
 estat cde, mvalue(50 500 5000)
 
@@ -1373,7 +1381,7 @@ estat cde, mvalue(50 500 5000)
 mediate (fertility_intentions, probit) /// outcome, no controls
         (uncertainty_index_final, linear) /// mediator
         (ind_binary) /// treatment
-        , all
+        if sample_final == 1, all
 
 estat cde, mvalue(50 500 5000)
 
@@ -1381,9 +1389,14 @@ estat cde, mvalue(50 500 5000)
 mediate (fertility_intentions i.gender_num religiosity_num age, probit) /// outcome with controls
         (uncertainty_index_final, linear) /// mediator with controls
         (ind_binary) /// treatment
-        , all
+        if sample_final == 1, all
 
 estat cde, mvalue(50 500 5000)
+
+
+  
+
+
 
 
   
