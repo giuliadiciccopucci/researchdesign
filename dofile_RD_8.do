@@ -1394,6 +1394,100 @@ mediate (fertility_intentions i.gender_num religiosity_num age, probit) /// outc
 estat cde, mvalue(50 500 5000)
 
 
+//Multinomial regression
+gen fertility_3cat = .
+replace fertility_3cat = 0 if fertility1doyouwanttohavechildre == "No"
+replace fertility_3cat = 1 if fertility1doyouwanttohavechildre == "Yes"
+replace fertility_3cat = 2 if fertility1doyouwanttohavechildre == "I haven't decided yet"
+
+label define fert3lab 0 "No" 1 "Yes" 2 "Undecided"
+label values fertility_3cat fert3lab
+label variable fertility_3cat "Fertility intentions (No, Yes, Undecided)"
+
+//FERTILITY ON SOCIAL PLATFORM
+//baseline YES (instagram)
+mlogit fertility_3cat i.instagram_use_cat i.gender_num religiosity_num age if sample_final == 1, baseoutcome(1)
+margins, dydx(instagram_use_cat) predict(outcome(0)) // Effetto su "No"
+margins, dydx(instagram_use_cat) predict(outcome(2)) // Effetto su "Undecided"
+
+//baseline NO (instagram)
+mlogit fertility_3cat i.instagram_use_cat i.gender_num religiosity_num age if sample_final == 1, baseoutcome(0)
+margins, dydx(instagram_use_cat) predict(outcome(1)) // Effetto su "Yes"
+margins, dydx(instagram_use_cat) predict(outcome(2)) // Effetto su "Undecided"
+
+
+//baseline YES (TikTok)
+mlogit fertility_3cat i.tiktok_use_cat i.gender_num religiosity_num age if sample_final == 1, baseoutcome(1)
+margins, dydx(tiktok_use_cat) predict(outcome(0)) // Effetto su "No"
+margins, dydx(tiktok_use_cat) predict(outcome(2)) // Effetto su "Undecided"
+
+//baseline NO (TikTok)
+mlogit fertility_3cat i.tiktok_use_cat i.gender_num religiosity_num age if sample_final == 1, baseoutcome(0)
+margins, dydx(tiktok_use_cat) predict(outcome(1)) // Effetto su "Yes"
+margins, dydx(tiktok_use_cat) predict(outcome(2)) // Effetto su "Undecided"
+
+
+//baseline YES (YouTube)
+mlogit fertility_3cat i.youtube_use_cat i.gender_num religiosity_num age if sample_final == 1, baseoutcome(1)
+margins, dydx(youtube_use_cat) predict(outcome(0)) // Effetto su "No"
+margins, dydx(youtube_use_cat) predict(outcome(2)) // Effetto su "Undecided"
+
+//baseline YES (YouTube)
+mlogit fertility_3cat i.youtube_use_cat i.gender_num religiosity_num age if sample_final == 1, baseoutcome(0)
+margins, dydx(youtube_use_cat) predict(outcome(1)) // Effetto su "Yes"
+margins, dydx(youtube_use_cat) predict(outcome(2)) // Effetto su "Undecided"
+
+//FERTILITY ON CONTENT
+
+// Contenuti informativi
+mlogit fertility_3cat info_binary i.gender_num religiosity_num age if sample_final == 1, baseoutcome(1)
+margins, dydx(info_binary) predict(outcome(0))  // No
+margins, dydx(info_binary) predict(outcome(2))  // Indecisi
+
+mlogit fertility_3cat info_binary i.gender_num religiosity_num age if sample_final == 1, baseoutcome(0)
+margins, dydx(info_binary) predict(outcome(1))  // Yes
+margins, dydx(info_binary) predict(outcome(2))  // Indecisi
+
+
+// Contenuti sull'indipendenza
+mlogit fertility_3cat ind_binary i.gender_num religiosity_num age if sample_final == 1, baseoutcome(1)
+margins, dydx(ind_binary) predict(outcome(0))  // No
+margins, dydx(ind_binary) predict(outcome(2))  // Indecisi
+
+mlogit fertility_3cat ind_binary i.gender_num religiosity_num age if sample_final == 1, baseoutcome(0)
+margins, dydx(ind_binary) predict(outcome(1))  // Yes
+margins, dydx(ind_binary) predict(outcome(2))  // Indecisi
+
+
+// Contenuti ambientali
+mlogit fertility_3cat env_binary i.gender_num religiosity_num age if sample_final == 1, baseoutcome(1)
+margins, dydx(env_binary) predict(outcome(0))  // No
+margins, dydx(env_binary) predict(outcome(2))  // Indecisi
+
+mlogit fertility_3cat env_binary i.gender_num religiosity_num age if sample_final == 1, baseoutcome(0)
+margins, dydx(env_binary) predict(outcome(1))  // Yes
+margins, dydx(env_binary) predict(outcome(2))  // Indecisi
+
+
+//Logistic decisi/indecisi
+gen fertility_decision = .
+replace fertility_decision = 1 if inlist(fertility1doyouwanttohavechildre, "Yes", "No")
+replace fertility_decision = 0 if fertility1doyouwanttohavechildre == "I haven't decided yet"
+label define fertdec 0 "Undecided" 1 "Decided"
+label values fertility_decision fertdec
+label variable fertility_decision "Fertility certainty (0=Undecided, 1=Decided)"
+tab fertility_decision
+
+logit fertility_decision i.instagram_use_cat i.gender_num religiosity_num age if sample_final == 1
+logit fertility_decision i.tiktok_use_cat i.gender_num religiosity_num age if sample_final == 1
+logit fertility_decision i.youtube_use_cat i.gender_num religiosity_num age if sample_final == 1
+
+
+logit fertility_decision info_binary i.gender_num religiosity_num age if sample_final == 1
+logit fertility_decision ind_binary i.gender_num religiosity_num age if sample_final == 1
+logit fertility_decision env_binary i.gender_num religiosity_num age if sample_final == 1
+
+
   
 
 
