@@ -1182,6 +1182,7 @@ foreach m in m4 m5 m6 m7 m8 m9 m10 m11 m12 m13 {
 }
 
 // cration of a dataset for the graph
+preserve
 clear
 svmat ME, names(col)
 rename c1 meffect
@@ -1209,6 +1210,7 @@ graph bar meffect, over(name, sort(meffect) descending label(angle(45) labsize(m
     scheme(s1mono) ///
     yline(0, lcolor(red) lpattern(dash))
 graph export "fertility_effects_simple.png", replace width(3000) height(2000)
+restore
 
 // testing mediating effect 
 
